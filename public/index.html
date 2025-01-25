@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Menu Upload</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .upload-form {
+            border: 2px dashed #ccc;
+            padding: 20px;
+            text-align: center;
+            margin-top: 20px;
+        }
+        .preview {
+            max-width: 300px;
+            margin: 20px auto;
+        }
+        .preview img {
+            max-width: 100%;
+        }
+        .success-message {
+            color: green;
+            display: none;
+        }
+        .error-message {
+            color: red;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <h1>Menu Upload Portal</h1>
+    <div class="upload-form">
+        <form id="uploadForm">
+            <div>
+                <label for="vendorName">Vendor Name:</label>
+                <input type="text" id="vendorName" name="vendorName" required>
+            </div>
+            <br>
+            <div>
+                <label for="menuImage">Select Menu Image:</label>
+                <input type="file" id="menuImage" name="menuImage" accept="image/*" required>
+            </div>
+            <br>
+            <button type="submit">Upload Menu</button>
+        </form>
+        <div class="preview">
+            <img id="imagePreview" src="" alt="" style="display: none;">
+        </div>
+        <div id="successMessage" class="success-message">Upload successful!</div>
+        <div id="errorMessage" class="error-message"></div>
+    </div>
+
+    <script>
+        const form = document.getElementById('uploadForm');
+        const imageInput = document.getElementById('menuImage');
+        const imagePreview = document.getElementById('imagePreview');
+        const successMessage = document.getElementById('successMessage');
+        const errorMessage = document.getElementById('errorMessage');
+
+        imageInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    imagePreview.src = e.target.result;
+                    imagePreview.style.display = 'block';
+                }
+                reader.readAsDataURL(file);
+            }
+        });
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const formData = new FormData();
+            formData.append('menuImage', imageInput.files[0]);
+            formData.append('vendorName', document.getElementById('vendorName').value);
+
+            try {
+                const response = await fetch('/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    successMessage.style.display = 'block';
+                    errorMessage.style.display = 'none';
+                    form.reset();
+                    imagePreview.style.display = 'none';
+                } else {
+                    errorMessage.textContent = data.error;
+                    errorMessage.style.display = 'block';
+                    successMessage.style.display = 'none';
+                }
+            } catch (error) {
+                errorMessage.textContent = 'Upload failed. Please try again.';
+                errorMessage.style.display = 'block';
+                successMessage.style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html> 
