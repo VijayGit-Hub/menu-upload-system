@@ -32,6 +32,32 @@
             color: red;
             display: none;
         }
+        .home-button {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            padding: 15px 25px;
+            background-color: #2196F3;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1.1em;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            transition: transform 0.3s ease, background-color 0.3s ease;
+        }
+        .home-button:hover {
+            transform: translateY(-2px);
+            background-color: #1976D2;
+        }
+        @media (max-width: 600px) {
+            .home-button {
+                bottom: 10px;
+                left: 10px;
+                padding: 12px 20px;
+                font-size: 1em;
+            }
+        }
     </style>
 </head>
 <body>
@@ -56,6 +82,10 @@
         <div id="successMessage" class="success-message">Upload successful!</div>
         <div id="errorMessage" class="error-message"></div>
     </div>
+
+    <button class="home-button" onclick="window.location.href='/'">
+        Home
+    </button>
 
     <script>
         const form = document.getElementById('uploadForm');

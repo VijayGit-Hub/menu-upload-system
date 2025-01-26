@@ -132,12 +132,43 @@
                 font-size: 1em;
             }
         }
+
+        .loader-container {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.8);
+            z-index: 999;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .loader {
+            width: 50px;
+            height: 50px;
+            border: 5px solid #f3f3f3;
+            border-radius: 50%;
+            border-top: 5px solid #4CAF50;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
     </style>
 </head>
 <body>
     <div class="header">
         <h1>Today's Menus</h1>
         <div class="date" id="currentDate"></div>
+    </div>
+
+    <div class="loader-container" id="loader">
+        <div class="loader"></div>
     </div>
 
     <div class="menu-grid" id="menuGrid">
@@ -184,7 +215,9 @@
 
         // Function to load and display menus
         async function loadMenus() {
+            const loader = document.getElementById('loader');
             try {
+                loader.style.display = 'flex';
                 const response = await fetch('/api/menus');
                 const menus = await response.json();
                 
@@ -209,6 +242,8 @@
                         <p>Please try again later</p>
                     </div>
                 `;
+            } finally {
+                loader.style.display = 'none';
             }
         }
 
