@@ -44,6 +44,9 @@ ensureDataDir();
 // Add this function after ensureDataDir
 async function cleanupOldImages() {
     try {
+        // First ensure the directories exist
+        await ensureDataDir();
+        
         // Get yesterday's date in YYYY-MM-DD format
         const yesterday = new Date();
         yesterday.setDate(yesterday.getDate() - 1);
@@ -52,21 +55,31 @@ async function cleanupOldImages() {
         // Read vendors data
         const vendors = await readVendorsData();
         
-        // Get list of all files in uploads directory
-        const files = await fs.readdir(UPLOADS_DIR);
-        
-        // Filter out today's images
-        const todayVendors = vendors.filter(v => v.uploadDate === new Date().toISOString().split('T')[0]);
-        const todayImages = new Set(todayVendors.map(v => path.basename(v.imageUrl)));
-        
-        // Delete old files
-        for (const file of files) {
-            // Skip if file is used in today's menus
-            if (todayImages.has(file)) continue;
+        // Check if uploads directory exists before trying to read it
+        try {
+            // Get list of all files in uploads directory
+            const files = await fs.readdir(UPLOADS_DIR);
             
-            const filePath = path.join(UPLOADS_DIR, file);
-            await fs.unlink(filePath);
-            console.log(`Deleted old image: ${file}`);
+            // Filter out today's images
+            const todayVendors = vendors.filter(v => v.uploadDate === new Date().toISOString().split('T')[0]);
+            const todayImages = new Set(todayVendors.map(v => path.basename(v.imageUrl)));
+            
+            // Delete old files
+            for (const file of files) {
+                // Skip if file is used in today's menus
+                if (todayImages.has(file)) continue;
+                
+                const filePath = path.join(UPLOADS_DIR, file);
+                try {
+                    await fs.unlink(filePath);
+                    console.log(`Deleted old image: ${file}`);
+                } catch (unlinkError) {
+                    console.error(`Error deleting file ${file}:`, unlinkError);
+                }
+            }
+        } catch (readDirError) {
+            // If uploads directory doesn't exist or can't be read, just log it
+            console.log('No uploads directory found or empty, skipping cleanup');
         }
 
         // Update vendors.json to remove old entries
