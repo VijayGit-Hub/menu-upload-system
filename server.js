@@ -4,13 +4,13 @@ const path = require('path');
 const fs = require('fs').promises; // For async file operations
 const app = express();
 
-// Update path constants to use Render's persistent storage
+// Update path constants to use Render's tmp directory in production
 const UPLOADS_DIR = process.env.NODE_ENV === 'production' 
-    ? '/opt/render/project/src/uploads'
+    ? '/tmp/uploads'
     : path.join(__dirname, 'uploads');
 
 const DATA_DIR = process.env.NODE_ENV === 'production'
-    ? '/opt/render/project/src/data'
+    ? '/tmp/data'
     : path.join(__dirname, 'data');
 
 const VENDORS_FILE = path.join(DATA_DIR, 'vendors.json');

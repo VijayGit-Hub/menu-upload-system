@@ -8,11 +8,4 @@ services:
       - key: PORT
         value: 3000
       - key: NODE_ENV
-        value: production
-    disk:
-      - name: uploads
-        mountPath: /opt/render/project/src/uploads
-        sizeGB: 1
-      - name: data
-        mountPath: /opt/render/project/src/data
-        sizeGB: 1 
+        value: production 
