@@ -4,16 +4,23 @@ const path = require('path');
 const fs = require('fs').promises; // For async file operations
 const app = express();
 
-// Path to our vendors data file
-const VENDORS_FILE = path.join(__dirname, 'data', 'vendors.json');
+// Update path constants to use Render's persistent storage
+const UPLOADS_DIR = process.env.NODE_ENV === 'production' 
+    ? '/opt/render/project/src/uploads'
+    : path.join(__dirname, 'uploads');
+
+const DATA_DIR = process.env.NODE_ENV === 'production'
+    ? '/opt/render/project/src/data'
+    : path.join(__dirname, 'data');
+
+const VENDORS_FILE = path.join(DATA_DIR, 'vendors.json');
 
 // Ensure data directory exists
 const ensureDataDir = async () => {
-    const dataDir = path.join(__dirname, 'data');
     try {
-        await fs.access(dataDir);
+        await fs.access(DATA_DIR);
     } catch {
-        await fs.mkdir(dataDir);
+        await fs.mkdir(DATA_DIR, { recursive: true });
     }
     
     // Create vendors.json if it doesn't exist
@@ -22,10 +29,58 @@ const ensureDataDir = async () => {
     } catch {
         await fs.writeFile(VENDORS_FILE, JSON.stringify([]));
     }
+
+    // Ensure uploads directory exists
+    try {
+        await fs.access(UPLOADS_DIR);
+    } catch {
+        await fs.mkdir(UPLOADS_DIR, { recursive: true });
+    }
 };
 
 // Initialize data directory and file
 ensureDataDir();
+
+// Add this function after ensureDataDir
+async function cleanupOldImages() {
+    try {
+        // Get yesterday's date in YYYY-MM-DD format
+        const yesterday = new Date();
+        yesterday.setDate(yesterday.getDate() - 1);
+        const yesterdayStr = yesterday.toISOString().split('T')[0];
+
+        // Read vendors data
+        const vendors = await readVendorsData();
+        
+        // Get list of all files in uploads directory
+        const files = await fs.readdir(UPLOADS_DIR);
+        
+        // Filter out today's images
+        const todayVendors = vendors.filter(v => v.uploadDate === new Date().toISOString().split('T')[0]);
+        const todayImages = new Set(todayVendors.map(v => path.basename(v.imageUrl)));
+        
+        // Delete old files
+        for (const file of files) {
+            // Skip if file is used in today's menus
+            if (todayImages.has(file)) continue;
+            
+            const filePath = path.join(UPLOADS_DIR, file);
+            await fs.unlink(filePath);
+            console.log(`Deleted old image: ${file}`);
+        }
+
+        // Update vendors.json to remove old entries
+        const updatedVendors = vendors.filter(v => v.uploadDate === new Date().toISOString().split('T')[0]);
+        await writeVendorsData(updatedVendors);
+        
+    } catch (error) {
+        console.error('Error cleaning up old images:', error);
+    }
+}
+
+// Run cleanup at startup and every 24 hours
+cleanupOldImages();
+setInterval(cleanupOldImages, 24 * 60 * 60 * 1000);
 
 // Function to read vendors data
 async function readVendorsData() {
@@ -49,14 +104,15 @@ async function writeVendorsData(data) {
 
 // Configure multer for image upload
 const storage = multer.diskStorage({
-    destination: './uploads/',
+    destination: async function(req, file, cb) {
+        try {
+            await fs.access(UPLOADS_DIR);
+        } catch {
+            await fs.mkdir(UPLOADS_DIR, { recursive: true });
+        }
+        cb(null, UPLOADS_DIR);
+    },
     filename: function(req, file, cb) {
-        // Log the incoming file details
-        console.log('Uploading file:', {
-            originalName: file.originalname,
-            mimeType: file.mimetype,
-            size: file.size
-        });
         cb(null, file.fieldname + '-' + Date.now() + path.extname(file.originalname));
     }
 });
@@ -95,7 +151,7 @@ function checkFileType(file, cb) {
 // Serve static files from public directory
 
 // Serve uploaded files from uploads directory
-app.use('/uploads', express.static('uploads'));
+app.use('/uploads', express.static(UPLOADS_DIR));
 
 app.get('/', (req, res) => {
     console.log('Serving user.html');
