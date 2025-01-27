@@ -16,6 +16,7 @@
             padding: 20px;
             text-align: center;
             margin-top: 20px;
+            display: none;
         }
         .preview {
             max-width: 300px;
@@ -58,11 +59,83 @@
                 font-size: 1em;
             }
         }
+        .pin-form {
+            border: 2px dashed #ccc;
+            padding: 20px;
+            text-align: center;
+            margin-top: 20px;
+            max-width: 400px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .pin-input {
+            font-size: 24px;
+            letter-spacing: 8px;
+            padding: 10px;
+            width: 200px;
+            text-align: center;
+            margin: 10px 0;
+            border: 2px solid #ccc;
+            border-radius: 5px;
+        }
+        .verify-button {
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 10px;
+        }
+        .verify-button:hover {
+            background-color: #45a049;
+        }
+        .pin-error {
+            color: red;
+            margin-top: 10px;
+            display: none;
+        }
+        .loader-dot {
+            display: none;
+            width: 10px;
+            height: 10px;
+            margin: 0 5px;
+            background-color: white;
+            border-radius: 50%;
+            display: inline-block;
+            animation: bounce 0.5s infinite alternate;
+        }
+        @keyframes bounce {
+            to { transform: translateY(-5px); }
+        }
     </style>
 </head>
 <body>
     <h1>Menu Upload Portal</h1>
-    <div class="upload-form">
+    
+    <div class="pin-form" id="pinForm">
+        <h2>Vendor Verification</h2>
+        <p>Please enter your 6-digit vendor PIN</p>
+        <input type="text" 
+               class="pin-input" 
+               id="pinInput" 
+               maxlength="6" 
+               pattern="\d*" 
+               inputmode="numeric"
+               placeholder="******">
+        <div>
+            <button class="verify-button" id="verifyButton" onclick="verifyPin()">
+                <span>Verify PIN</span>
+                <span class="loader-dot"></span>
+                <span class="loader-dot"></span>
+                <span class="loader-dot"></span>
+            </button>
+        </div>
+        <div class="pin-error" id="pinError"></div>
+    </div>
+
+    <div class="upload-form" id="uploadForm">
         <form id="uploadForm">
             <div>
                 <label for="vendorName">Vendor Name:</label>
@@ -88,7 +161,7 @@
     </button>
 
     <script>
-        const form = document.getElementById('uploadForm');
+        const uploadFormElement = document.getElementById('uploadForm').querySelector('form');
         const imageInput = document.getElementById('menuImage');
         const imagePreview = document.getElementById('imagePreview');
         const successMessage = document.getElementById('successMessage');
@@ -106,7 +179,7 @@
             }
         });
 
-        form.addEventListener('submit', async (e) => {
+        uploadFormElement.addEventListener('submit', async (e) => {
             e.preventDefault();
             
             const formData = new FormData();
@@ -118,23 +191,73 @@
                     method: 'POST',
                     body: formData
                 });
+                
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                
                 const data = await response.json();
 
                 if (data.success) {
                     successMessage.style.display = 'block';
                     errorMessage.style.display = 'none';
-                    form.reset();
+                    uploadFormElement.reset();
                     imagePreview.style.display = 'none';
                 } else {
-                    errorMessage.textContent = data.error;
+                    errorMessage.textContent = data.error || 'Upload failed. Please try again.';
                     errorMessage.style.display = 'block';
                     successMessage.style.display = 'none';
                 }
             } catch (error) {
+                console.error('Upload error:', error);
                 errorMessage.textContent = 'Upload failed. Please try again.';
                 errorMessage.style.display = 'block';
                 successMessage.style.display = 'none';
             }
+        });
+
+        async function verifyPin() {
+            const pinInput = document.getElementById('pinInput');
+            const pinError = document.getElementById('pinError');
+            const verifyButton = document.getElementById('verifyButton');
+            const uploadFormDiv = document.getElementById('uploadForm');
+            const pinFormDiv = document.getElementById('pinForm');
+            const dots = document.querySelectorAll('.loader-dot');
+
+            verifyButton.disabled = true;
+            dots.forEach(dot => dot.style.display = 'inline-block');
+            pinError.style.display = 'none';
+
+            try {
+                const response = await fetch('/verify-pin', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ pin: pinInput.value })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    pinFormDiv.style.display = 'none';
+                    uploadFormDiv.style.display = 'block';
+                } else {
+                    pinError.textContent = 'Invalid PIN. Please try again.';
+                    pinError.style.display = 'block';
+                    pinInput.value = '';
+                }
+            } catch (error) {
+                pinError.textContent = 'Error verifying PIN. Please try again.';
+                pinError.style.display = 'block';
+            } finally {
+                verifyButton.disabled = false;
+                dots.forEach(dot => dot.style.display = 'none');
+            }
+        }
+
+        document.getElementById('pinInput').addEventListener('input', function(e) {
+            this.value = this.value.replace(/[^0-9]/g, '').slice(0, 6);
         });
     </script>
 </body>

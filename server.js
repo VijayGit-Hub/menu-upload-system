@@ -178,8 +178,63 @@ app.get('/vendor', (req, res) => {
 
 // Route for user view page (user.html)
 
+// Add this after your existing constants
+const AUTHORIZED_VENDORS = [
+    {
+        pin: "123456",
+        name: "Cafeteria One",
+        id: "V001"
+    },
+    {
+        pin: "234567",
+        name: "Food Corner",
+        id: "V002"
+    },
+    {
+        pin: "345678",
+        name: "Lunch Box",
+        id: "V003"
+    },
+    {
+        pin: "456789",
+        name: "Spice Garden",
+        id: "V004"
+    },
+    {
+        pin: "567890",
+        name: "Fresh Bites",
+        id: "V005"
+    }
+];
 
-// Modified upload handler to save vendor data
+// Add this route before your upload route
+app.post('/verify-pin', express.json(), async (req, res) => {
+    const { pin } = req.body;
+
+    if (!pin || pin.length !== 6) {
+        return res.json({ 
+            success: false, 
+            message: 'Invalid PIN format' 
+        });
+    }
+
+    const vendor = AUTHORIZED_VENDORS.find(v => v.pin === pin);
+
+    if (!vendor) {
+        return res.json({ 
+            success: false, 
+            message: 'Unauthorized vendor' 
+        });
+    }
+
+    res.json({ 
+        success: true, 
+        vendorName: vendor.name,
+        vendorId: vendor.id
+    });
+});
+
+// Modify your upload route to include vendor verification
 app.post('/upload', (req, res) => {
     upload(req, res, async (err) => {
         if (err) {
@@ -193,6 +248,13 @@ app.post('/upload', (req, res) => {
 
         try {
             const vendorName = req.body.vendorName;
+            
+            // Verify vendor exists
+            const vendor = AUTHORIZED_VENDORS.find(v => v.name === vendorName);
+            if (!vendor) {
+                return res.json({ error: 'Unauthorized vendor' });
+            }
+
             const imageFilename = req.file.filename;
             const uploadTime = new Date().toLocaleTimeString();
 
@@ -203,9 +265,10 @@ app.post('/upload', (req, res) => {
             const vendorIndex = vendors.findIndex(v => v.vendorName === vendorName);
             const vendorData = {
                 vendorName,
+                vendorId: vendor.id,
                 imageUrl: `/uploads/${imageFilename}`,
                 uploadTime,
-                uploadDate: new Date().toISOString().split('T')[0] // Store date for filtering
+                uploadDate: new Date().toISOString().split('T')[0]
             };
 
             if (vendorIndex >= 0) {
