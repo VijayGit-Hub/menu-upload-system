@@ -181,31 +181,31 @@ app.get('/vendor', (req, res) => {
 // Add this after your existing constants
 const AUTHORIZED_VENDORS = [
     {
-        pin: "111111",
+        pin: "162345",
         name: "WOW Food",
         id: "V001",
         building: "Water"
     },
     {
-        pin: "111112",
+        pin: "162344",
         name: "Blueberry Foods",
         id: "V002",
         building: "Water"
     },
     {
-        pin: "111113",
+        pin: "162333",
         name: "TRUPTI CATERS",
         id: "V003",
         building: "Water"
     },
     {
-        pin: "111114",
+        pin: "168345",
         name: "DEVI CATERERS",
         id: "V004",
         building: "Sky"
     },
     {
-        pin: "111115",
+        pin: "169045",
         name: "TRIPUTI CATERERS",
         id: "V005",
         building: "Sky"
