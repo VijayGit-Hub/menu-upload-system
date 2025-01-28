@@ -53,10 +53,16 @@
         }
 
         .vendor-name {
-            font-size: 1.2em;
             font-weight: bold;
-            margin: 0 0 10px 0;
+            font-size: 1.1em;
             color: #333;
+        }
+
+        .building-name {
+            color: #444;
+            font-size: 1em;
+            margin: 8px 0;
+            font-weight: 600;
         }
 
         .upload-time {
@@ -207,7 +213,8 @@
                          onclick="openModal('${menu.imageUrl}')">
                     <div class="menu-info">
                         <div class="vendor-name">${menu.vendorName}</div>
-                        <div class="upload-time">Uploaded at ${menu.uploadTime}</div>
+                        <div class="building-name">Cafeteria - ${menu.building || 'Building not specified'}</div>
+                        <div class="upload-time">Menu Uploaded at ${menu.uploadTime}</div>
                     </div>
                 </div>
             `;

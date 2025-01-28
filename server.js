@@ -181,29 +181,34 @@ app.get('/vendor', (req, res) => {
 // Add this after your existing constants
 const AUTHORIZED_VENDORS = [
     {
-        pin: "123456",
-        name: "Cafeteria One",
-        id: "V001"
+        pin: "111111",
+        name: "WOW Food",
+        id: "V001",
+        building: "Water"
     },
     {
-        pin: "234567",
-        name: "Food Corner",
-        id: "V002"
+        pin: "111112",
+        name: "Blueberry Foods",
+        id: "V002",
+        building: "Water"
     },
     {
-        pin: "345678",
-        name: "Lunch Box",
-        id: "V003"
+        pin: "111113",
+        name: "TRUPTI CATERS",
+        id: "V003",
+        building: "Water"
     },
     {
-        pin: "456789",
-        name: "Spice Garden",
-        id: "V004"
+        pin: "111114",
+        name: "DEVI CATERERS",
+        id: "V004",
+        building: "Sky"
     },
     {
-        pin: "567890",
-        name: "Fresh Bites",
-        id: "V005"
+        pin: "111115",
+        name: "TRIPUTI CATERERS",
+        id: "V005",
+        building: "Sky"
     }
 ];
 
@@ -268,7 +273,8 @@ app.post('/upload', (req, res) => {
                 vendorId: vendor.id,
                 imageUrl: `/uploads/${imageFilename}`,
                 uploadTime,
-                uploadDate: new Date().toISOString().split('T')[0]
+                uploadDate: new Date().toISOString().split('T')[0],
+                building: vendor.building
             };
 
             if (vendorIndex >= 0) {
