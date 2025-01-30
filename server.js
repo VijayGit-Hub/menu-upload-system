@@ -200,15 +200,21 @@ const AUTHORIZED_VENDORS = [
     },
     {
         pin: "168345",
-        name: "DEVI CATERERS",
+        name: "DEVI CATERER",
         id: "V004",
         building: "Sky"
     },
     {
         pin: "169045",
-        name: "TRIPUTI CATERERS",
+        name: "TRUPTI CATERER",
         id: "V005",
         building: "Sky"
+    },
+    {
+        pin: "162245",
+        name: "VKL CATERER",
+        id: "V006",
+        building: "Water"
     }
 ];
 
