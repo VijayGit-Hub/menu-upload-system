@@ -109,6 +109,30 @@
         @keyframes bounce {
             to { transform: translateY(-5px); }
         }
+        .meal-type-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin: 15px 0;
+        }
+        .meal-type-btn {
+            padding: 10px 20px;
+            border: 2px solid #4CAF50;
+            background-color: white;
+            color: #4CAF50;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .meal-type-btn:hover {
+            background-color: #4CAF50;
+            color: white;
+        }
+        .meal-type-btn.selected {
+            background-color: #4CAF50;
+            color: white;
+        }
     </style>
 </head>
 <body>
@@ -137,11 +161,24 @@
 
     <div class="upload-form" id="uploadForm">
         <form id="uploadForm">
-            <div>
-                <label for="vendorName">Vendor Name:</label>
-                <input type="text" id="vendorName" name="vendorName" required>
+            <div style="display: none;">
+                <input type="hidden" id="vendorName" name="vendorName">
+                <input type="hidden" id="building" name="building">
             </div>
-            <br>
+            <div id="vendorWelcome" style="display: none; margin-bottom: 20px; text-align: center;">
+                <h3>Welcome, <span id="vendorNameDisplay"></span></h3>
+                <p>Building: <span id="buildingDisplay"></span></p>
+            </div>
+            <div id="mealTypeSelector" style="margin-bottom: 20px; text-align: center;">
+                <h4>Select Meal Type:</h4>
+                <div class="meal-type-buttons">
+                    <button type="button" class="meal-type-btn" data-meal="Breakfast">Breakfast</button>
+                    <button type="button" class="meal-type-btn" data-meal="Lunch">Lunch</button>
+                    <button type="button" class="meal-type-btn" data-meal="Evening Snacks">Evening Snacks</button>
+                    <button type="button" class="meal-type-btn" data-meal="Dinner">Dinner</button>
+                </div>
+                <input type="hidden" id="mealType" name="mealType" required>
+            </div>
             <div>
                 <label for="menuImage">Select Menu Image:</label>
                 <input type="file" id="menuImage" name="menuImage" accept="image/*" required>
@@ -182,9 +219,17 @@
         uploadFormElement.addEventListener('submit', async (e) => {
             e.preventDefault();
             
+            const mealType = document.getElementById('mealType').value;
+            if (!mealType) {
+                alert('Please select a meal type');
+                return;
+            }
+            
             const formData = new FormData();
             formData.append('menuImage', imageInput.files[0]);
             formData.append('vendorName', document.getElementById('vendorName').value);
+            formData.append('building', document.getElementById('building').value);
+            formData.append('mealType', mealType);
 
             try {
                 const response = await fetch('/upload', {
@@ -222,6 +267,11 @@
             const verifyButton = document.getElementById('verifyButton');
             const uploadFormDiv = document.getElementById('uploadForm');
             const pinFormDiv = document.getElementById('pinForm');
+            const vendorNameInput = document.getElementById('vendorName');
+            const buildingInput = document.getElementById('building');
+            const vendorWelcome = document.getElementById('vendorWelcome');
+            const vendorNameDisplay = document.getElementById('vendorNameDisplay');
+            const buildingDisplay = document.getElementById('buildingDisplay');
             const dots = document.querySelectorAll('.loader-dot');
 
             verifyButton.disabled = true;
@@ -240,10 +290,17 @@
                 const data = await response.json();
 
                 if (data.success) {
+                    vendorNameInput.value = data.vendorName;
+                    buildingInput.value = data.building;
+                    
+                    vendorNameDisplay.textContent = data.vendorName;
+                    buildingDisplay.textContent = data.building;
+                    vendorWelcome.style.display = 'block';
+                    
                     pinFormDiv.style.display = 'none';
                     uploadFormDiv.style.display = 'block';
                 } else {
-                    pinError.textContent = 'Invalid PIN. Please try again.';
+                    pinError.textContent = data.message || 'Invalid PIN. Please try again.';
                     pinError.style.display = 'block';
                     pinInput.value = '';
                 }
@@ -258,6 +315,17 @@
 
         document.getElementById('pinInput').addEventListener('input', function(e) {
             this.value = this.value.replace(/[^0-9]/g, '').slice(0, 6);
+        });
+
+        document.querySelector('.meal-type-buttons').addEventListener('click', (e) => {
+            if (e.target.classList.contains('meal-type-btn')) {
+                document.querySelectorAll('.meal-type-btn').forEach(btn => 
+                    btn.classList.remove('selected'));
+                
+                e.target.classList.add('selected');
+                
+                document.getElementById('mealType').value = e.target.dataset.meal;
+            }
         });
     </script>
 </body>

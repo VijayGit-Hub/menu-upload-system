@@ -235,7 +235,8 @@ app.post('/verify-pin', express.json(), async (req, res) => {
     res.json({ 
         success: true, 
         vendorName: vendor.name,
-        vendorId: vendor.id
+        vendorId: vendor.id,
+        building: vendor.building
     });
 });
 
@@ -253,6 +254,7 @@ app.post('/upload', (req, res) => {
 
         try {
             const vendorName = req.body.vendorName;
+            const mealType = req.body.mealType;
             
             // Verify vendor exists
             const vendor = AUTHORIZED_VENDORS.find(v => v.name === vendorName);
@@ -267,14 +269,19 @@ app.post('/upload', (req, res) => {
             let vendors = await readVendorsData();
             
             // Find if vendor exists and update, or add new vendor
-            const vendorIndex = vendors.findIndex(v => v.vendorName === vendorName);
+            const vendorIndex = vendors.findIndex(v => 
+                v.vendorName === vendorName && 
+                v.uploadDate === new Date().toISOString().split('T')[0]
+            );
+
             const vendorData = {
                 vendorName,
                 vendorId: vendor.id,
+                building: vendor.building,
                 imageUrl: `/uploads/${imageFilename}`,
                 uploadTime,
                 uploadDate: new Date().toISOString().split('T')[0],
-                building: vendor.building
+                mealType
             };
 
             if (vendorIndex >= 0) {
